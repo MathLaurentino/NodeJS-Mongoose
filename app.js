@@ -3,9 +3,10 @@
     const app = express();
     const handlebars = require("express-handlebars");
     const bodyParser = require("body-parser");
-    // const mongoose = require("mongoose");
-    // mongoose.Promise = global.Promise;
+    const path = require("path");
     const admin = require("./routes/admin");
+    const mongoose = require("mongoose");
+    
 
 // Config
 
@@ -18,7 +19,18 @@
         app.set('view engine', 'handlebars');
 
     // Mongoose
+        mongoose.Promise = global.Promise;
+        mongoose.connect("mongodb://127.0.0.1:27017/blogapp", {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        }).then(() => {
+            console.log("Conexão com o MongoDB deu certo");
+        }).catch((err) => {
+            console.log("Conexão com MongoDB deu errado: " + err);
+        })
 
+    // Public
+        app.use(express.static(path.join(__dirname, "public"))); /* os arquivos estáticos estão na pasta "public" */
 
 
 // Rotas 
