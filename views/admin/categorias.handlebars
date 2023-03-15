@@ -12,12 +12,9 @@
             <h4> {{nome}} </h4>
             <small> {{slug}} </small> <br>
 
-            <a href="/admin/categorias/adit/{{_id}}"> <button class="btn btn-success mt-4"> Editar Categoria </button> </a>
-            
-            <form action="/admin/categorias/deletar" method="post" class="mt-2">
-                <input type="hidden" name="id" value="{{_id}}">
-                <button type="submit" class="btn btn-danger">Deletar Categoria</button>
-            </form>
+            <a href="/admin/categorias/adit/{{_id}}"> <button class="btn btn-success mt-4"> Editar</button> </a>
+
+            <a href="/admin/categorias/deletar/{{_id}}"> <button  class="btn btn-danger mt-4">Deletar</button> </a>
 
         </div>
     </div>
