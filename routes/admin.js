@@ -22,14 +22,6 @@
     });
 
 
-    /**     GET: /posts
-    * Rota para renderizar a página de gerenciamento de posts do painel administrativo
-    */
-    router.get('/posts', (req, res) => {
-        res.render("admin/index");
-    });
-
-
     // -----------
 
 
@@ -46,12 +38,9 @@
     });
 
 
-    /**     GET: /categorias/add
-     * Rota para renderizar a página de adição de categoria do painel administrativo
-     */
-    router.get('/categorias/add', (req, res) => {
+    router.get("/categorias/add", (req, res) => {
         res.render("admin/addcategoria");
-    });
+    })
 
 
     /**     POST: /categorias/add
@@ -59,11 +48,10 @@
      */
     router.post('/categorias/add', async (req, res) => {
         try {
-            const { nome, slug } = req.body;
-            const erros = verify.verifyCategoria(nome, slug);
+            const {nome, slug, erro} = verify.limparEValidarCategoria(req.body);
 
-            if (erros.length > 0) {
-                res.render("admin/addcategoria", { erro: erros });
+            if (erro.length > 0) {
+                res.render("admin/addcategoria", { erro: erro });
                 return;
             }
 
@@ -75,7 +63,7 @@
             res.redirect("/admin/categorias");
         } catch (err) {
             req.flash("error_msg", "Erro ao salvar categoria!");
-            res.redirect("/admin");
+            res.redirect("/admin/categorias/add");
         }
     });
 
@@ -101,19 +89,20 @@
      */
     router.post("/categorias/edit", (req, res) => {
 
-        erros = verify.verifyCategoria(req.body.nome, req.body.slug);
+        const {nome, slug, erro} = verify.limparEValidarCategoria(req.body);
 
-        if (erros.length > 0) {
+
+        if (erro.length > 0) {
 
             Categoria.findById(req.body.id).lean().then((categoria) => {
-                res.render("admin/editcategorias", {erro: erros, categoria: categoria});
+                res.render("admin/editcategorias", {erro: erro, categoria: categoria});
             });
             
         } else {
             Categoria.findOne({_id: req.body.id}).then((categoria) => {
 
-                categoria.nome = req.body.nome;
-                categoria.slug = req.body.slug;
+                categoria.nome = nome;
+                categoria.slug = slug;
     
                 categoria.save().then(()=> {
                     req.flash("success_msg", "categoria editada com sucesso");
@@ -151,26 +140,40 @@
     });
 
 
+    // ----------- POSATGENS -----------
+
+
     // -----------
 
     /**     GET: /postagens
      * Rota para renderizar a página de postagens do painel administrativo
      */
-    router.get("/postagens", (req, res) => {
-        res.render("admin/postagens");
+    router.get("/postagens", async (req, res) => {
+
+        try {
+            const postagens = await Postagem.find().lean().populate("categoria").sort({data:'desc'});
+            res.render("admin/postagens", ({postagens: postagens}))
+        } catch (err) {
+            req.flash("error_msg", "Erro ao listar postagens " + err);
+            res.redirect("/admin",);
+        }
+
     });
+
+    // -----------
 
 
     /**     GET: /postagens/add
      * Rota para renderizar a página de adição de postagens do painel administrativo
      */
-    router.get("/postagens/add", (req,res) => {
-        Categoria.find().lean().then((categorias) => {
-            res.render("admin/addPostagem", ({categorias: categorias}));
-        }).catch((err) => {
+    router.get("/postagens/add", async (req, res) => {
+        try {
+            const categorias = await Categoria.find().lean();
+            res.render("admin/addPostagem", { categorias });
+        } catch (err) {
             req.flash("error_msg", "Houve um erro ao carregar o formulário");
             res.redirect("/admin/postagens");
-        });
+        }
     });
 
 
@@ -180,11 +183,11 @@
     router.post("/postagens/add", async (req, res) => {
 
         try{
-            const {titulo, slug, descricao, conteudo, categoria} = req.body;
-            erro = verify.verifyPostagem(titulo, slug, descricao, conteudo, categoria);
+            const {titulo, slug, descricao, conteudo, categoria, erro} = verify.limparEValidarPostagem(req.body);
 
             if (erro.length > 0) {
-                res.render("/admin/addPostagem", {erro: erro});
+                const categorias = await Categoria.find().lean();
+                res.render("admin/addPostagem", {categorias: categorias, erro: erro});
                 return;
             }
 
@@ -202,8 +205,66 @@
         
     });
 
+    
+
 
     // -----------
+
+    router.get("/postagem/edit/:id", async (req, res) => {
+        try {
+            const postagem = await Postagem.findOne({_id: req.params.id}).lean();
+            const categorias = await Categoria.find().lean();
+            res.render("admin/editPostagem", {postagem: postagem, categorias: categorias});
+        } catch (err) {
+            req.flash("error_msg", "Falha ao identificar postagem!");
+            res.redirect("/admin/postagens");
+        }
+    });
+
+
+    router.post("/postagem/edit", async (req, res) => {
+
+        try{
+            const {titulo, slug, descricao, conteudo, categoria, erro} = verify.limparEValidarPostagem(req.body);
+
+            if (erro.length > 0) {
+                const postagem = await Postagem.findById(req.body.id).lean();
+                const categorias = await Categoria.find().lean();
+                res.render("admin/editPostagem", ({postagem: postagem, categorias: categorias, erro: erro}))
+                return;
+            }
+
+            const editPostagem = await Postagem.findOne({_id: req.body.id});
+            editPostagem.titulo = titulo;
+            editPostagem.slug = slug;
+            editPostagem.descricao = descricao;
+            editPostagem.conteudo = conteudo;
+            editPostagem.categoria = categoria;
+
+            await editPostagem.save();
+
+            req.flash("success_msg", "Postagem editada com sucesso");
+            res.redirect("/admin/postagens");
+        }catch (err) {
+            req.flash("error_msg", "Houve um erro ao editar a postagem");
+            res.redirect("/admin/postagens");
+        }
+
+    })
+
+
+    // -----------  
+
+    router.get("/postagem/deletar/:id", (req, res) => {
+        
+        Postagem.deleteOne({_id: req.params.id }).then(() => {
+            req.flash("success_msg", "Postagem deletada com sucesso");
+        }).catch((err) => {
+            req.flash("error_msg", "Falha ao deletar categoria");
+        });      
+        
+        res.redirect("/admin/postagens");  
+    })
 
 // Export
     module.exports = router;
