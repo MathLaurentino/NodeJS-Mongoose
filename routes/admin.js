@@ -11,7 +11,8 @@
 
 // Rotas Admin
 
-    /**     GET: /
+    /**     
+     * @route GET /
      * Rota para renderizar a página inicial do painel administrativo
      * @param {Object} req - O objeto de solicitação HTTP
      * @param {Object} res - O objeto de resposta HTTP
@@ -24,7 +25,8 @@
     // -----------
 
 
-    /**     GET: /categorias
+    /**     
+     * @route GET /categorias
      * Rota para renderizar a página de gerenciamento de categorias do painel administrativo
      */
     router.get('/categorias', async (req, res) => {
@@ -44,7 +46,8 @@
     })
 
 
-    /**     POST: /categorias/add
+    /**     
+     * @route POST /categorias/add
      * Rota para adicionar uma nova categoria
      */
     router.post('/categorias/add', async (req, res) => {
@@ -72,7 +75,8 @@
     // -----------
 
 
-    /**     GET: /categorias/adit/:id
+    /**     
+     * @route GET /categorias/adit/:id
      * Rota para renderizar a página de edição de categoria do painel administrativo
      */
     router.get("/categorias/adit/:id", async (req, res) => {
@@ -86,7 +90,8 @@
     });
 
 
-    /**     POST: /categorias/edit
+    /**     
+     * @route POST /categorias/edit
      * Rota para editar uma categoria
      */
     router.post("/categorias/edit", async (req, res) => {
@@ -116,7 +121,8 @@
     // -----------
 
 
-    /**     GET: /categorias/deletar
+    /**     
+     * @route GET /categorias/deletar
      * Rota para apagar uma categoria
      */
     router.get("/categorias/deletar/:id", (req, res) => {
@@ -134,7 +140,8 @@
 
     // -----------
 
-    /**     GET: /postagens
+    /**     
+     * @route GET /postagens
      * Rota para renderizar a página de postagens do painel administrativo
      */
     router.get("/postagens", async (req, res) => {
@@ -152,7 +159,8 @@
     // -----------
 
 
-    /**     GET: /postagens/add
+    /**     
+     * @route GET /postagens/add
      * Rota para renderizar a página de adição de postagens do painel administrativo
      */
     router.get("/postagens/add", async (req, res) => {
@@ -166,7 +174,8 @@
     });
 
 
-    /**     POST: /postagens/add
+    /**     
+     * @route POST /postagens/add
      * Rota para adicionar uma categoria
      */
     router.post("/postagens/add", async (req, res) => {
@@ -195,10 +204,14 @@
     });
 
     
-
-
     // -----------
 
+
+    /**
+     * @route GET /postagem/edit/:id
+     * Busca uma postagem específica no banco de dados pelo ID e renderiza a página de edição de postagem,
+     * passando a postagem encontrada e as categorias disponíveis para a view.
+     */
     router.get("/postagem/edit/:id", async (req, res) => {
         try {
             const postagem = await Postagem.findOne({_id: req.params.id}).lean();
@@ -210,7 +223,10 @@
         }
     });
 
-
+    /**
+     * @route POST /postagem/edit
+     * Atualiza uma postagem existente no banco de dados com os dados enviados pelo usuário na requisição.
+     */
     router.post("/postagem/edit", async (req, res) => {
 
         try{
@@ -238,12 +254,13 @@
             req.flash("error_msg", "Houve um erro ao editar a postagem");
             res.redirect("/admin/postagens");
         }
+    });
 
-    })
-
-
-    // -----------  
-
+    /**
+     * @route GET /postagem/deletar/:id
+     * Deleta uma postagem específica do banco de dados pelo ID e redireciona o usuário para a página de gerenciamento
+     * de postagens.
+     */
     router.get("/postagem/deletar/:id", (req, res) => {
         
         Postagem.deleteOne({_id: req.params.id }).then(() => {
@@ -253,7 +270,7 @@
         });      
         
         res.redirect("/admin/postagens");  
-    })
+    });
 
 // Export
     module.exports = router;

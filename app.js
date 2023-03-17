@@ -11,6 +11,10 @@
     const flash = require("connect-flash"); // mensagens flash (só aparecem uma vez)
     const path = require("path"); // vem com o nodeJS
     const admin = require("./routes/admin"); // rotas admin
+    require("./modules/Postagem");
+    require("./modules/Categoria");
+    const Postagem = mongoose.model("postagens");
+    const Categoria = mongoose.model("categorias");
     
 
 // Config
@@ -26,8 +30,8 @@
     // Middleware 
         /* Middleware para mensagens de feedback ao usuário */
         app.use((req, res, next) => {
-            res.locals.success_msg = req.flash("success_msg");
-            res.locals.error_msg = req.flash("error_msg");
+            res.locals.success_msg = req.flash("success_msg"); // mensagens de sucesso
+            res.locals.error_msg = req.flash("error_msg"); // mensagens de erro
             next();
         });
 
@@ -60,8 +64,94 @@
 
 
 // Rotas 
+
     /* Rota para o painel de administração */
     app.use('/admin', admin);
+
+
+    /**
+     * @route GET /
+     * Rota para renderizar a página inicial
+     * Manda dados de todas as postagens com suas respectivas categorias
+     */
+    app.get("/", async (req,res) => {
+        try {
+            const postagens = await Postagem.find().lean().populate("categoria").sort({data: 'desc'});
+            res.render("index", {postagens: postagens});
+        } catch (err) {
+            req.flash("error_msg", "Não foi possível carregar os posts")
+            res.redirect("/404")
+        } 
+    });
+
+
+    /**
+     * @route GET /
+     * Rota para renderizar a página de uma postagem expecífica
+     * Mandado todos os dados da postagem para a view
+     */
+    app.get("/postagem/:slug", (req, res) => {
+        Postagem.findOne({slug: req.params.slug}).lean().then((postagem) => {
+            if (postagem){
+                res.render("postagem/postagem", {postagem: postagem});
+            } else {
+                req.flash("error_msg", "Esta postagem não existe");
+                res.redirect("/");
+            }
+        }).catch((err) => {
+            req.flash("error_msg", "Houve um erro interno");
+            res.redirect("/");
+        })
+    });
+
+
+    /**
+     * @route GET /
+     * Rota para renderizar a página das categorias do site
+     * Exibe todas as categorias na view
+     */
+    app.get("/categorias", async (req, res) => {
+        try {
+            const categorias = await Categoria.find().lean();
+            res.render("categorias/categorias", {categorias: categorias});
+        } catch (err) {
+            req.flash("error_msg", "Houve um erro interno");
+            res.redirect("/");
+        }
+    });
+
+
+    /**
+     * @route GET /
+     * Rota para renderizar a página que exibe as postagens de uma categoria expecífica
+     * Manda um arrei com todas as postaegns de uma categoria expecífica para a view
+     */
+    app.get("/categorias/:slug", async (req, res) => {
+        try {
+            const categoria = await Categoria.findOne({slug: req.params.slug}).lean();
+
+            if (categoria) {
+                const postagens = await Postagem.find({categoria: categoria._id}).lean();
+                res.render("categorias/postagens", ({postagens: postagens, categoria: categoria}));
+            } else {
+                req.flash("error_msg", "categoria não encontrada");
+                res.redirect("/categorias");
+            }
+
+        } catch (err) {
+            req.flash("error_msg", "Houve um erro enterno");
+            res.redirect("/categorias");
+        }
+    });
+
+
+    /**
+     * @route GET /
+     * Rota para renderizar a página de erro
+     */
+    app.get("/404", (req, res) => {
+        res.send("Erro 404");
+    });
 
 
 // Outros
