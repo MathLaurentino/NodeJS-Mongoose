@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
+const passport = require("passport");
 
 const usuarioController = require("../controllers/usuarioController");
 
 
 router.get("/registro", (req, res) => {
-    res.render("usuarios/registro")
+    res.render("usuarios/registro");
 });
 
 
@@ -19,18 +20,31 @@ router.post('/registro', [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        return res.render('usuarios/registro', { errors: errors.array() });
+        return res.render('usuarios/registro', { erros: errors.array() });
     } 
 
     else if (await usuarioController.findOneByEmail(req.body.email)){
-        erros = [{msg: "email já cadastrado"}]
-        return res.render('usuarios/registro', { errors: erros}); 
+        erros = [{msg: "email já cadastrado"}];
+        return res.render('usuarios/registro', { erros: erros}); 
     } 
     
     else {
         usuarioController.createNewUser(req, res);
     }
   
+});
+
+
+router.get("/login", (req, res) => {
+    res.render("usuarios/login");
+});
+
+router.post("/login", (req, res, next) => {
+    passport.authenticate("local", {
+        successRedirect: "/",
+        failureRedirect: "/usuario/login",
+        failureFlash: true
+    })(req, res, next);
 });
 
 module.exports = router;

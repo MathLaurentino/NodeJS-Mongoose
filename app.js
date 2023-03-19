@@ -10,6 +10,8 @@
     const session = require("express-session"); // criação de sessão do usuário
     const flash = require("connect-flash"); // mensagens flash (só aparecem uma vez)
     const path = require("path"); // vem com o nodeJS
+    const passport = require("passport");
+    require("./config/auth")(passport);
 
     const admin = require("./routes/admin"); // rotas admin
     const usuario = require("./routes/usuario"); // rotas usuario
@@ -28,6 +30,8 @@
             resave: true, // indica se a sessão deve ser regravada mesmo que não tenha sido modificada durante a requisição 
             saveUninitialized: true // indica se deve ser salvo uma sessão nova quando ela é criada, mesmo que ela ainda não tenha sido modificada.
         }));
+        app.use(passport.initialize());
+        app.use(passport.session());
         app.use(flash()); // gerenciar mensagens de erro ou sucesso
 
     // Middleware 
@@ -35,6 +39,7 @@
         app.use((req, res, next) => {
             res.locals.success_msg = req.flash("success_msg"); // mensagens de sucesso
             res.locals.error_msg = req.flash("error_msg"); // mensagens de erro
+            res.locals.error = req.flash("error");
             next();
         });
 

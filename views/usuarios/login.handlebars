@@ -4,13 +4,11 @@
     </div>
 {{/each}}
 
-<h3 class="m-3">Cadastre-se</h3>
+<h3 class="m-3">Login</h3>
 <div class="card">
     <div class="card-body m-4">
 
-        <form action="/usuario/registro" method="post">
-            <label for="nome"> Nome: </label>
-                <input type="text" id="nome" name="nome" class="form-control" required value="Matheus">
+        <form action="/usuario/login" method="post">
             <label for="email"> Email: </label>
                 <input type="email" id="email" name="email" class="form-control" required value="matheus@gmail.com">
             <label for="senha"> Senha: </label>
