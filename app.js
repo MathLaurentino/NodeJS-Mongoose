@@ -10,9 +10,12 @@
     const session = require("express-session"); // criação de sessão do usuário
     const flash = require("connect-flash"); // mensagens flash (só aparecem uma vez)
     const path = require("path"); // vem com o nodeJS
+
     const admin = require("./routes/admin"); // rotas admin
-    require("./modules/Postagem");
-    require("./modules/Categoria");
+    const usuario = require("./routes/usuario"); // rotas usuario
+
+    require("./models/Postagem");
+    require("./models/Categoria");
     const Postagem = mongoose.model("postagens");
     const Categoria = mongoose.model("categorias");
     
@@ -67,6 +70,9 @@
 
     /* Rota para o painel de administração */
     app.use('/admin', admin);
+
+    /* Rota para o painel de usuarios */
+    app.use("/usuario", usuario);
 
 
     /**

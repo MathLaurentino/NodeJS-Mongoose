@@ -2,13 +2,16 @@
     const express = require("express");
     const router = express.Router();
     const mongoose = require('mongoose');
-    require("../modules/Categoria");
-    require("../modules/Postagem");
 
+    const postagemUtils = require('../utils/postagem');
+    const categoriaUtils = require('../utils/categoria');
+    const postController = require('../controllers/postagemController');
+
+    require("../models/Categoria");
+    require("../models/Postagem");
     const Categoria = mongoose.model('categorias');
     const Postagem = mongoose.model('postagens');
-    const verify = require("../modules/veriryForm")
-
+    
 // Rotas Admin
 
     /**     
@@ -52,7 +55,7 @@
      */
     router.post('/categorias/add', async (req, res) => {
         try {
-            const {nome, slug, erro} = verify.limparEValidarCategoria(req.body);
+            const {nome, slug, erro} = categoriaUtils.limparEValidarCategoria(req.body);
 
             if (erro.length > 0) {
                 res.render("admin/addcategoria", { erro: erro });
@@ -96,7 +99,7 @@
      */
     router.post("/categorias/edit", async (req, res) => {
         try {
-            const {nome, slug, erro} = verify.limparEValidarCategoria(req.body);
+            const {nome, slug, erro} = categoriaUtils.limparEValidarCategoria(req.body);
             if (erro.length > 0) {
                 const categoria = await Categoria.findById(req.body.id).lean();
                 res.render("admin/editcategorias", {erro: erro, categoria: categoria});
@@ -144,17 +147,16 @@
      * @route GET /postagens
      * Rota para renderizar a página de postagens do painel administrativo
      */
-    router.get("/postagens", async (req, res) => {
-
+    router.get('/postagens', async (req, res) => {
         try {
-            const postagens = await Postagem.find().lean().populate("categoria").sort({data:'desc'});
-            res.render("admin/postagens", ({postagens: postagens}))
+            // aprendendo a utilizar controllers, depois irei refatorar o resto do código
+            const { postagens } = await postController.getAllPosts();
+            res.render('admin/postagens', { postagens });
         } catch (err) {
-            req.flash("error_msg", "Erro ao listar postagens " + err);
+            req.flash("error_msg", "Erro ao listar postagens");
             res.redirect("/admin",);
         }
-
-    });
+      });
 
     // -----------
 
@@ -181,7 +183,7 @@
     router.post("/postagens/add", async (req, res) => {
 
         try{
-            const {titulo, slug, descricao, conteudo, categoria, erro} = verify.limparEValidarPostagem(req.body);
+            const {titulo, slug, descricao, conteudo, categoria, erro} = postagemUtils.limparEValidarPostagem(req.body);
 
             if (erro.length > 0) {
                 const categorias = await Categoria.find().lean();
@@ -223,6 +225,7 @@
         }
     });
 
+    
     /**
      * @route POST /postagem/edit
      * Atualiza uma postagem existente no banco de dados com os dados enviados pelo usuário na requisição.
@@ -230,7 +233,7 @@
     router.post("/postagem/edit", async (req, res) => {
 
         try{
-            const {titulo, slug, descricao, conteudo, categoria, erro} = verify.limparEValidarPostagem(req.body);
+            const {titulo, slug, descricao, conteudo, categoria, erro} = postagemUtils.limparEValidarPostagem(req.body);
 
             if (erro.length > 0) {
                 const postagem = await Postagem.findById(req.body.id).lean();
@@ -255,6 +258,7 @@
             res.redirect("/admin/postagens");
         }
     });
+
 
     /**
      * @route GET /postagem/deletar/:id
