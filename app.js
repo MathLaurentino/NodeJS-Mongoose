@@ -37,9 +37,16 @@
     // Middleware 
         /* Middleware para mensagens de feedback ao usuário */
         app.use((req, res, next) => {
+
             res.locals.success_msg = req.flash("success_msg"); // mensagens de sucesso
             res.locals.error_msg = req.flash("error_msg"); // mensagens de erro
+
             res.locals.error = req.flash("error");
+
+            /** armazenar dados so usuário logado
+             *  req.user: o passport altomaticamente cria */
+            res.locals.user = req.user || null;
+
             next();
         });
 

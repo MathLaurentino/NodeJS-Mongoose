@@ -6,6 +6,7 @@
     const postagemUtils = require('../utils/postagem');
     const categoriaUtils = require('../utils/categoria');
     const postController = require('../controllers/postagemController');
+    const {eAdmin} = require("../utils/eAdmin");
 
     require("../models/Categoria");
     require("../models/Postagem");
@@ -20,7 +21,7 @@
      * @param {Object} req - O objeto de solicitação HTTP
      * @param {Object} res - O objeto de resposta HTTP
      */
-    router.get('/', (req, res) => {
+    router.get('/', eAdmin, (req, res) => {
         res.render("admin/index");
     });
 
@@ -32,7 +33,7 @@
      * @route GET /categorias
      * Rota para renderizar a página de gerenciamento de categorias do painel administrativo
      */
-    router.get('/categorias', async (req, res) => {
+    router.get('/categorias', eAdmin, async (req, res) => {
         try{
             const categorias = await Categoria.find().lean();
             res.render("admin/categorias", {categorias: categorias});
@@ -44,7 +45,7 @@
     });
 
 
-    router.get("/categorias/add", (req, res) => {
+    router.get("/categorias/add", eAdmin, (req, res) => {
         res.render("admin/addcategoria");
     })
 
@@ -53,7 +54,7 @@
      * @route POST /categorias/add
      * Rota para adicionar uma nova categoria
      */
-    router.post('/categorias/add', async (req, res) => {
+    router.post('/categorias/add', eAdmin, async (req, res) => {
         try {
             const {nome, slug, erro} = categoriaUtils.limparEValidarCategoria(req.body);
 
@@ -82,7 +83,7 @@
      * @route GET /categorias/adit/:id
      * Rota para renderizar a página de edição de categoria do painel administrativo
      */
-    router.get("/categorias/adit/:id", async (req, res) => {
+    router.get("/categorias/adit/:id", eAdmin, async (req, res) => {
         try{
             const categoria = await Categoria.findOne({_id: req.params.id}).lean();
             res.render("admin/editcategorias", {categoria: categoria});
@@ -97,7 +98,7 @@
      * @route POST /categorias/edit
      * Rota para editar uma categoria
      */
-    router.post("/categorias/edit", async (req, res) => {
+    router.post("/categorias/edit", eAdmin, async (req, res) => {
         try {
             const {nome, slug, erro} = categoriaUtils.limparEValidarCategoria(req.body);
             if (erro.length > 0) {
@@ -128,7 +129,7 @@
      * @route GET /categorias/deletar
      * Rota para apagar uma categoria
      */
-    router.get("/categorias/deletar/:id", (req, res) => {
+    router.get("/categorias/deletar/:id", eAdmin, (req, res) => {
         Categoria.deleteOne({_id: req.params.id }).then(() => {
             req.flash("success_msg", "Categoria deletada com sucesso");
         }).catch((err) => {
@@ -147,7 +148,7 @@
      * @route GET /postagens
      * Rota para renderizar a página de postagens do painel administrativo
      */
-    router.get('/postagens', async (req, res) => {
+    router.get('/postagens', eAdmin, async (req, res) => {
         try {
             // aprendendo a utilizar controllers, depois irei refatorar o resto do código
             const { postagens } = await postController.getAllPosts();
@@ -165,7 +166,7 @@
      * @route GET /postagens/add
      * Rota para renderizar a página de adição de postagens do painel administrativo
      */
-    router.get("/postagens/add", async (req, res) => {
+    router.get("/postagens/add", eAdmin, async (req, res) => {
         try {
             const categorias = await Categoria.find().lean();
             res.render("admin/addPostagem", { categorias });
@@ -180,7 +181,7 @@
      * @route POST /postagens/add
      * Rota para adicionar uma categoria
      */
-    router.post("/postagens/add", async (req, res) => {
+    router.post("/postagens/add", eAdmin, async (req, res) => {
 
         try{
             const {titulo, slug, descricao, conteudo, categoria, erro} = postagemUtils.limparEValidarPostagem(req.body);
@@ -214,7 +215,7 @@
      * Busca uma postagem específica no banco de dados pelo ID e renderiza a página de edição de postagem,
      * passando a postagem encontrada e as categorias disponíveis para a view.
      */
-    router.get("/postagem/edit/:id", async (req, res) => {
+    router.get("/postagem/edit/:id", eAdmin, async (req, res) => {
         try {
             const postagem = await Postagem.findOne({_id: req.params.id}).lean();
             const categorias = await Categoria.find().lean();
@@ -230,7 +231,7 @@
      * @route POST /postagem/edit
      * Atualiza uma postagem existente no banco de dados com os dados enviados pelo usuário na requisição.
      */
-    router.post("/postagem/edit", async (req, res) => {
+    router.post("/postagem/edit", eAdmin, async (req, res) => {
 
         try{
             const {titulo, slug, descricao, conteudo, categoria, erro} = postagemUtils.limparEValidarPostagem(req.body);
@@ -265,7 +266,7 @@
      * Deleta uma postagem específica do banco de dados pelo ID e redireciona o usuário para a página de gerenciamento
      * de postagens.
      */
-    router.get("/postagem/deletar/:id", (req, res) => {
+    router.get("/postagem/deletar/:id", eAdmin, (req, res) => {
         
         Postagem.deleteOne({_id: req.params.id }).then(() => {
             req.flash("success_msg", "Postagem deletada com sucesso");
